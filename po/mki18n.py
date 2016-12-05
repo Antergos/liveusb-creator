@@ -331,47 +331,29 @@ def fileBaseOf(filename,withPath=0) :
       return filename
    else:
       return os.path.basename(filename)
+
+
 # -----------------------------------------------------------------------------
 # m k d i r ( )         -- Create a directory (and possibly the entire tree) --
 # ^^^^^^^^^^^^^
 # 
-def mkdir(directory) :
-   """Create a directory (and possibly the entire tree).
+def mkdir(directory):
+    """Create a directory (and possibly the entire tree).
 
-   The os.mkdir() will fail to create a directory if one of the
-   directory in the specified path does not exist.  mkdir()
-   solves this problem.  It creates every intermediate directory
-   required to create the final path. Under Unix, the function 
-   only supports forward slash separator, but under Windows and MacOS
-   the function supports the forward slash and the OS separator (backslash
-   under windows).
-   """ 
+    The os.mkdir() will fail to create a directory if one of the
+    directory in the specified path does not exist.  mkdir()
+    solves this problem.  It creates every intermediate directory
+    required to create the final path. Under Unix, the function
+    only supports forward slash separator, but under Windows and MacOS
+    the function supports the forward slash and the OS separator (backslash
+    under windows).
 
-   # translate the path separators
-   directory = unixpath(directory)
-   # build a list of all directory elements
-   aList = filter(lambda x: len(x)>0, directory.split('/'))
-   theLen = len(aList)                     
-   # if the first element is a Windows-style disk drive
-   # concatenate it with the first directory
-   if aList[0].endswith(':'):
-      if theLen > 1:
-         aList[1] = aList[0] + '/' + aList[1]
-         del aList[0]      
-         theLen -= 1         
-   # if the original directory starts at root,
-   # make sure the first element of the list 
-   # starts at root too
-   if directory[0] == '/':     
-      aList[0] = '/' + aList[0]
-   # Now iterate through the list, check if the 
-   # directory exists and if not create it
-   theDir = ''
-   for i in range(theLen):
-      theDir += aList[i]
-      if not os.path.exists(theDir):
-         os.mkdir(theDir)
-      theDir += '/'   
+    **************
+    This is no longer necessary.
+    """
+    return os.makedirs(directory, exist_ok=True)
+
+
       
 # -----------------------------------------------------------------------------
 # u n i x p a t h ( )         -- Return a path name that contains Unix separator. --
