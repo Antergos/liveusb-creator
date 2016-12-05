@@ -53,7 +53,7 @@ from . import qml_rc
 from . import grabber
 
 from liveusb import LiveUSBCreator, LiveUSBError, _
-from liveusb.releases import releases, get_fedora_flavors
+from liveusb.releases.fedora import releases, get_fedora_flavors
 
 try:
     import dbus.mainloop.pyqt5

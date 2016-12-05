@@ -37,7 +37,7 @@ from argparse import _AppendAction
 from stat import ST_SIZE
 
 from liveusb import _, LiveUSBError
-from liveusb.releases import releases
+from liveusb.releases import fedora as releases
 
 
 

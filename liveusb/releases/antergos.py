@@ -19,7 +19,6 @@ ALT_URL = '{0}/{1}'.format(BASE_URL, CONFIG['ALT_PATH'])
 ARCHES = CONFIG['ARCHES']
 
 def getArch(url):
-    print(url)
     return url.split('/')[-1].split('.')[0].split('-')[3]
 
 def getRelease(download):
