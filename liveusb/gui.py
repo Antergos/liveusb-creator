@@ -37,6 +37,7 @@ import os
 import sys
 import logging
 import urllib.parse as urlparse
+import ruamel.yaml as yaml
 
 
 from time import sleep
@@ -61,9 +62,15 @@ try:
 except Exception as e:
     pass
 
+config_file = open('/etc/liveusb-creator.yml', 'r').read()
+
+CONFIG = yaml.safe_load(config_file)
 MAX_FAT16 = 2047
 MAX_FAT32 = 3999
 MAX_EXT = 2097152
+
+def __(text):
+    return _(text.format(CONFIG))
 
 class ReleaseDownloadThread(QThread):
     """ Heavy lifting in the process the iso file download """
@@ -361,7 +368,7 @@ class Release(QObject):
         self.errorChanged.emit()
         self.warningChanged.emit()
 
-        self.addInfo(_('After you have tried or installed Fedora, you can use Fedora LiveUSB Creator to restore your flash drive to its factory settings.'))
+        self.addInfo(__('After you have tried or installed {DISTRO}, you can use {DISTRO} LiveUSB Creator to restore your flash drive to its factory settings.'))
 
         self._writer.run()
 
@@ -422,7 +429,7 @@ class Release(QObject):
 
     @pyqtProperty(str, constant=True)
     def category(self):
-        if self._data['source'] in ['Local', 'Fedora Workstation', 'Fedora Server']:
+        if self._data['source'] in CONFIG['CATEGORIES']['main']:
             return 'main'
         elif self._data['source'] == 'Spins':
             return _('<b>Fedora Spins </b> &nbsp; Alternative desktops for Fedora')
