@@ -42,6 +42,8 @@ import ruamel.yaml as yaml
 
 from time import sleep
 from datetime import datetime
+
+from PyQt5.QtCore import QVariant
 from PyQt5.QtCore import pyqtProperty, pyqtSlot, QObject, QUrl, QDateTime, pyqtSignal, QThread, QAbstractListModel, QSortFilterProxyModel, QModelIndex, Qt, QTranslator, QLocale, QTimer
 from PyQt5.QtGui import QGuiApplication
 from PyQt5.QtWidgets import QApplication
@@ -69,8 +71,10 @@ MAX_FAT16 = 2047
 MAX_FAT32 = 3999
 MAX_EXT = 2097152
 
+
 def __(text):
-    return _(text.format(CONFIG))
+    return _(text.format_map(CONFIG))
+
 
 class ReleaseDownloadThread(QThread):
     """ Heavy lifting in the process the iso file download """
@@ -687,9 +691,11 @@ class LiveUSBData(QObject):
     currentDriveChanged = pyqtSignal()
     driveToRestoreChanged = pyqtSignal()
     updateThreadStopped = pyqtSignal()
+    configChanged = pyqtSignal()
 
     # has to be a property because you can't pass python signal parameters to qml
     _driveToRestore = None
+    _config = CONFIG
 
     _currentIndex = 0
     _currentDrive = 0
@@ -779,6 +785,10 @@ class LiveUSBData(QObject):
 
             self.currentDriveChanged.emit()
             self.driveToRestoreChanged.emit()
+
+    @pyqtProperty(QVariant, notify=configChanged)
+    def config(self):
+        return QVariant(self._config)
 
     @pyqtProperty(ReleaseListModel, notify=releasesChanged)
     def releaseModel(self):

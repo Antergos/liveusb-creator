@@ -11,7 +11,7 @@ ApplicationWindow {
     id: mainWindow
     minimumWidth: $(800)
     minimumHeight: $(480)
-    title: qsTranslate("", "Fedora LiveUSB Creator")
+    title: qsTranslate("", "%1 LiveUSB Creator").arg(liveUSBData.config.DISTRO)
 
     SystemPalette {
         id: palette
