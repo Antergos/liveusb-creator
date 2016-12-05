@@ -399,7 +399,7 @@ class Release(QObject):
     @pyqtProperty(float, notify=sizeChanged)
     def size(self):
         if not self.isLocal:
-            for arch in self._data['variants'].keys():
+            for arch in self._data['variants']:
                 if arch in self._archMap[self.liveUSBData.releaseProxyModel.archFilter]:
                     return self._data['variants'][arch]['size']
         return self._size
@@ -531,13 +531,14 @@ class Release(QObject):
             self._error.append(str(value))
             self.errorChanged.emit()
 
+
 class ReleaseListModel(QAbstractListModel):
     """ An abstraction over the list of releases to have them nicely exposed to QML and ready to be filtered
     """
     def __init__(self, parent):
         QAbstractListModel.__init__(self, parent)
 
-    def rowCount(self, parent=QModelIndex()):
+    def rowCount(self, parent=QModelIndex(), *args, **kwargs):
         return len(self.parent().releaseData)
 
     def roleNames(self):
@@ -547,6 +548,7 @@ class ReleaseListModel(QAbstractListModel):
         if index.isValid():
             return self.parent().releaseData[index.row()]
         return None
+
 
 class ReleaseListProxy(QSortFilterProxyModel):
     """ Filtering proxy for the release list
@@ -562,7 +564,6 @@ class ReleaseListProxy(QSortFilterProxyModel):
     _archMap = {'Intel 64bit': ['x86_64'], 'Intel 32bit': ['i686','i386']} #, 'ARM': ['armv7hl']}
     _archMapDetailed = {'Intel 64bit': _('ISO format image for Intel, AMD and other compatible PCs (64-bit)'), 'Intel 32bit': _('ISO format image for Intel, AMD and other compatible PCs (32-bit)')} #, 'ARM': ['armv7hl']}
 
-
     def __init__(self, parent, sourceModel):
         QSortFilterProxyModel.__init__(self, parent)
         self.setSourceModel(sourceModel)
@@ -575,7 +576,7 @@ class ReleaseListProxy(QSortFilterProxyModel):
             return None
         return self.parent().releaseData[i]
 
-    def rowCount(self, parent=QModelIndex()):
+    def rowCount(self, parent=QModelIndex(), *args, **kwargs):
         if self._frontPage and self.sourceModel().rowCount(parent) > 3:
             return 3
         return self.sourceModel().rowCount(parent)
@@ -633,6 +634,7 @@ class ReleaseListProxy(QSortFilterProxyModel):
             self.isFrontChanged.emit()
             self.invalidate()
 
+
 class LiveUSBLogHandler(logging.Handler):
 
     def __init__(self, cb):
@@ -642,6 +644,7 @@ class LiveUSBLogHandler(logging.Handler):
     def emit(self, record):
         if record.levelname in ('INFO', 'ERROR', 'WARN'):
             self.cb(record.msg)
+
 
 class USBDrive(QObject):
 
@@ -675,6 +678,7 @@ class USBDrive(QObject):
         self._beingRestored = True
         self.beingRestoredChanged.emit()
         self.live.restore_drive(self.drive, self.restoreCallback)
+
 
 class DataUpdateThread(QThread):
     def __init__(self, data):
@@ -850,6 +854,7 @@ class LiveUSBData(QObject):
             self.currentDriveChanged.emit()
             for r in self.releaseData:
                 r.download.finished = False
+
 
 class LiveUSBApp(QApplication):
     """ Main application class """

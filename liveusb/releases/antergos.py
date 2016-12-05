@@ -23,7 +23,7 @@ def getArch():
 
 def _get_dl_container(d, minimal):
     tab = d('.et_pb_tab_1')
-    return tab.children('.one_half').eq(1) if not minimal else tab.children('.et_column_last')
+    return tab.find('.one_half').eq(0) if not minimal else tab.find('.et_column_last')
 
 
 def _get_blurb_container(d, minimal):
@@ -36,7 +36,7 @@ def getSHA(d, minimal=False):
 
 
 def getSize(text):
-    match = re.search(r'([0-9.]+)[ ]?([KMG])B', text)
+    match = re.search(r'([0-9.]+)[ ]?([KMG])B?', text)
     if not match or len(match.groups()) not in [2, 3]:
         return 0
     size = float(match.group(1))
@@ -58,7 +58,7 @@ def getDownload(d, minimal=False):
     ret[getArch()] = dict(
         url=url,
         sha256=getSHA(d, minimal).replace('MD5 Sum: ', ''),
-        size=getSize(dl_container.find('li:nth-child(2)').text()),
+        size=getSize(dl_container.find('li:nth-child(2)').text().strip()),
         version=version.replace('Version ', '')
     )
     return ret
@@ -82,7 +82,7 @@ def getProductDetails(d, minimal=False):
             size=0
         )}
     }
-    name = dl_container.children('h3').text().replace(' ISO', '')
+    name = dl_container.find('h3').text().replace(' ISO', '')
 
     product['name'] = name
     product['source'] = name
@@ -94,7 +94,6 @@ def getProductDetails(d, minimal=False):
 
     desc = ['<ul>']
     p_contents = blurb_container.find('p').text().split('^')
-    print(p_contents)
     ___ = [desc.append('<li>{0}</li>'.format(x.strip())) for x in p_contents if x]
     desc.append('</ul>')
     product['description'] = ''.join(desc)
@@ -115,8 +114,8 @@ def getProducts(url=BASE_URL):
         return []
 
     return [
-        getProductDetails(d, False),
-        getProductDetails(d, True)
+        getProductDetails(d, minimal=False),
+        getProductDetails(d, minimal=True)
     ]
 
 
@@ -140,216 +139,10 @@ def get_flavors(store=True):
         releases[:] = r
 
     print(r)
-
     return r
 
-# A backup list of releases, just in case we can't fetch them.
-fedora_releases =  [{'description': u"<p>Fedora Workstation is a reliable, user-friendly, and powerful operating system for your laptop or desktop computer. It supports a wide range of developers, from hobbyists and students to professionals in corporate environments.</p>\n        <blockquote><p>&#8220;The plethora of tools provided by  Fedora allows me to get the job done.  It just works.&#8221;</p>\n              <p align=right> \u2015 <em>Christine Flood, JVM performance engineer</em></p></blockquote><h3>Sleek user interface</h3>\n\t      <p>Focus on your code in the GNOME 3 desktop environment. GNOME is built with developer feedback and minimizes distractions, so you can concentrate on what's important.</p>\n        <h3>Complete open source toolbox</h3>\n\t      <p>Skip the drag of trying to find or build the tools you need. With Fedora's complete set of open source languages, tools, and utilities, everything is a click or command line away. There's even project hosting and repositories like COPR to make your code and builds available quickly to the community.</p>\n        <h3>GNOME Boxes &amp; other virt tools</h3>\n\t      <p>Get virtual machines up and running quickly to test your code on multiple platforms using GNOME Boxes. Or dig into powerful, scriptable virtualization tools for even more control.</p>\n        <h3>Built-in Docker support</h3>\n\t      <p>Containerize your own apps, or deploy containerized apps out of the box on Fedora, using the latest technology like Docker.</p>\n        ",
-  'logo': 'qrc:/logo_workstation',
-  'name': 'Fedora Workstation',
-  'releaseDate': '2016-06-21',
-  'screenshots': [],
-  'source': 'Fedora Workstation',
-  'summary': "This is the Linux workstation you've been waiting for.",
-  'variants': {'i386': {'sha256': '1c96e1529cb25b08dac4ef29cb4f6eafdd9b6bbf008642fb4ae01a5e9bb31255',
-                        'size': 1717986918,
-                        'url': 'https://download.fedoraproject.org/pub/fedora/linux/releases/24/Workstation/i386/iso/Fedora-Workstation-Live-i386-24-1.2.iso'},
-               'x86_64': {'sha256': '8e12d7ba1fcf3328b8514d627788ee0146c0eef75a5e27f0674ee1fe4f1feaf6',
-                          'size': 1503238553,
-                          'url': 'https://download.fedoraproject.org/pub/fedora/linux/releases/24/Workstation/x86_64/iso/Fedora-Workstation-Live-x86_64-24-1.2.iso'}},
-  'version': '24'},
- {'description': u"<blockquote><p>&#8220;The simplicity introduced with rolekit and cockpit have made server deployments a breeze. What took me a few days on other operating systems took less than an hour with Fedora 24 Server. It just works.&#8221;</p>\n            <p align=right> \u2015 <em>Dan Mossor, Systems Engineer</em></p></blockquote><p>Fedora Server is a short-lifecycle, community-supported server operating system that enables seasoned system administrators experienced with any OS to make use of the very latest server-based technologies available in the open source community.</p>\n        <h3>Easy Administration</h3>\n  \t      <p>Manage your system simply with Cockpit's powerful, modern interface. View and monitor system performance and status, and deploy and manage container-based services.</p>\n        <h3>Server Roles</h3>\n\t        <p>There's no need to set up your server from scratch when you use server roles. Server roles plug into your Fedora Server system, providing a well-integrated service on top of the Fedora Server platform. Deploy and manage these prepared roles simply using the Rolekit tool.</p>\n        <h3>Database Services</h3>\n\t        <p>Fedora Server brings with it an enterprise-class, scalable database server powered by the open-source PostgreSQL project.</p>\n        <h3>Complete Enterprise Domain Solution</h3>\n\t      <p>Level up your Linux network with advanced identity management, DNS, certificate services, Windows(TM) domain integration throughout your environment with FreeIPA, the engine that drives Fedora Server's Domain Controller role.</p>\n        <blockquote><p>&#8220;The Docker Role for Fedora Server was simple and fast to install so that you can run your Docker images. This makes a great testbed for beginners and experts with docker so that they can develop their applications on the fly.&#8221;</p>\n            <p align=right> \u2015 <em>John Unland, Information Systems Student</em></p></blockquote>",
-  'logo': 'qrc:/logo_server',
-  'name': 'Fedora Server',
-  'releaseDate': '2016-06-21',
-  'screenshots': [],
-  'source': 'Fedora Server',
-  'summary': 'The latest technology. A stable foundation. Together, for your applications and services.',
-  'variants': {'x86_64': {'sha256': '1c0971d4c1a37bb06ec603ed3ded0af79e22069499443bb2d47e501c9ef42ae8',
-                          'size': 1825361100,
-                          'url': 'https://download.fedoraproject.org/pub/fedora/linux/releases/24/Server/x86_64/iso/Fedora-Server-dvd-x86_64-24-1.2.iso'}},
-  'version': '24'},
- {'description': u'<p>Here you can choose a OS image from your hard drive to be written to your flash disk</p><p>Currently it is only supported to write raw disk images (.iso or .bin)</p>',
-  'logo': 'qrc:/icon_folder',
-  'name': u'Custom OS...',
-  'releaseDate': '',
-  'screenshots': [],
-  'source': 'Local',
-  'summary': u'Pick a file from your drive(s)',
-  'variants': {'': {'sha256': '', 'size': 0, 'url': ''}},
-  'version': ''},
- {'description': u'<p>The Fedora KDE Plasma Desktop Edition is a powerful Fedora-based operating system utilizing the KDE Plasma Desktop as the main user interface.</p><p>Fedora KDE Plasma Desktop comes with many pre-selected top quality applications that suit all modern desktop use cases - from online communication like web browsing, instant messaging and electronic mail correspondence, through multimedia and entertainment, to an advanced productivity suite, including office applications and enterprise grade personal information management.</p><p>All KDE applications are well integrated, with a similar look and feel and an easy to use interface, accompanied by an outstanding graphical appearance.</p>',
-  'logo': 'qrc:/logo_plasma',
-  'name': 'Fedora KDE Plasma Desktop',
-  'releaseDate': '2016-06-21',
-  'screenshots': ['http://spins.fedoraproject.org/en/kde/../static/images/screenshots/screenshot-kde.jpg'],
-  'source': 'Spins',
-  'summary': 'A complete, modern desktop built using the KDE Plasma Desktop.',
-  'variants': {'i386': {'sha256': '70a1833b2bbc8309acef36b354384412b12c05bde6aa1e5a1403febe652b50ab',
-                        'size': 1288490188,
-                        'url': 'https://download.fedoraproject.org/pub/fedora/linux/releases/24/Live/i386/Fedora-KDE-Live-i386-24-1.2.iso'},
-               'x86_64': {'sha256': '28bcde6e4c2e5471ef982fcf15930fbc4181ccf4bd47efad8f915c7d89c29bbb',
-                          'size': 1288490188,
-                          'url': 'https://download.fedoraproject.org/pub/fedora/linux/releases/24/Live/x86_64/Fedora-KDE-Live-x86_64-24-1.2.iso'}},
-  'version': '24'},
- {'description': u'<p>The Fedora Xfce spin showcases the Xfce desktop, which aims to be fast and lightweight, while still being visually appealing and user friendly.</p><p>Fedora Xfce is a full-fledged desktop using the freedesktop.org standards.</p>',
-  'logo': 'qrc:/logo_xfce',
-  'name': 'Fedora Xfce Desktop',
-  'releaseDate': '2016-06-21',
-  'screenshots': ['http://spins.fedoraproject.org/en/xfce/../static/images/screenshots/screenshot-xfce.jpg'],
-  'source': 'Spins',
-  'summary': 'A complete, well-integrated Xfce Desktop.',
-  'variants': {'i386': {'sha256': '8837a634a65db89a42344213aa83f6fe251d4df30e02ca8826c5ded183a7b9f1',
-                        'size': 934281216,
-                        'url': 'https://download.fedoraproject.org/pub/fedora/linux/releases/24/Live/i386/Fedora-Xfce-Live-i386-24-1.2.iso'},
-               'x86_64': {'sha256': '71a1ab11cf92660bd8508ed14248e8341abac99002c7c3db71f4403e32bb6a9c',
-                          'size': 960495616,
-                          'url': 'https://download.fedoraproject.org/pub/fedora/linux/releases/24/Live/x86_64/Fedora-Xfce-Live-x86_64-24-1.2.iso'}},
-  'version': '24'},
- {'description': u'<p>LXDE, the "Lightweight X11 Desktop Environment", is an extremely fast, performant, and energy-saving desktop environment. It maintained by an international community of developers and comes with a beautiful interface, multi-language support, standard keyboard shortcuts and additional features like tabbed file browsing.</p><p>LXDE is not designed to be powerful and bloated, but to be usable and slim. A main goal of LXDE is to keep computer resource usage low. It is especially designed for computers with low hardware specifications like netbooks, mobile devices (e.g. MIDs) or older computers.</p>',
-  'logo': 'qrc:/logo_lxde',
-  'name': 'Fedora LXDE Desktop',
-  'releaseDate': '2016-06-21',
-  'screenshots': ['http://spins.fedoraproject.org/en/lxde/../static/images/screenshots/screenshot-lxde.jpg'],
-  'source': 'Spins',
-  'summary': 'A light, fast, less-resource hungry desktop environment.',
-  'variants': {'i386': {'sha256': 'ab497657c6a9108373415f43e052e9a0aa80e449627a385bda63345818651e52',
-                        'size': 1010827264,
-                        'url': 'https://download.fedoraproject.org/pub/fedora/linux/releases/24/Live/i386/Fedora-LXDE-Live-i386-24-1.2.iso'},
-               'x86_64': {'sha256': '74400c0b08adadb249b224466468b3b50e72157abf266d845137f3988fe407ad',
-                          'size': 877658112,
-                          'url': 'https://download.fedoraproject.org/pub/fedora/linux/releases/24/Live/x86_64/Fedora-LXDE-Live-x86_64-24-1.2.iso'}},
-  'version': '24'},
- {'description': u'<p>The MATE Compiz spin bundles MATE Desktop with Compiz Fusion. MATE Desktop is a lightweight, powerful desktop designed with productivity and performance in mind. The default windows manager is Marco which is usable for all machines and VMs. Compiz Fusion is a beautiful 3D windowing manager with Emerald and GTK+ theming.</p><p>If you want a powerful, lightweight Fedora desktop with 3D eyecandy you should definitely try the MATE-Compiz spin.</p>',
-  'logo': 'qrc:/logo_mate',
-  'name': 'Fedora MATE-Compiz Desktop',
-  'releaseDate': '2016-06-21',
-  'screenshots': ['http://spins.fedoraproject.org/en/mate-compiz/../static/images/screenshots/screenshot-matecompiz.jpg'],
-  'source': 'Spins',
-  'summary': 'A classic Fedora Desktop with an additional 3D Windows Manager.',
-  'variants': {'i386': {'sha256': '1e350f8a2e5509cd53d3ecade36d5df260830e59e924535c130f15b06ea578b9',
-                        'size': 1288490188,
-                        'url': 'https://download.fedoraproject.org/pub/fedora/linux/releases/24/Live/i386/Fedora-MATE_Compiz-Live-i386-24-1.2.iso'},
-               'x86_64': {'sha256': '0ad0b5c2ac188330de7f3614781ce5480e1214bd64d08821cfef23030128876f',
-                          'size': 1395864371,
-                          'url': 'https://download.fedoraproject.org/pub/fedora/linux/releases/24/Live/x86_64/Fedora-MATE_Compiz-Live-x86_64-24-1.2.iso'}},
-  'version': '24'},
- {'description': u'<p>Cinnamon is a Linux desktop which provides advanced innovative features and a traditional user experience. The desktop layout is similar to Gnome 2. The underlying technology is forked from Gnome Shell. The emphasis is put on making users feel at home and providing them with an easy to use and comfortable desktop experience.</p><p>Cinnamon is a popular desktop alternative to Gnome 3 and this spin provides the option to quickly try and install this desktop.</p>',
-  'logo': 'qrc:/logo_cinnamon',
-  'name': 'Fedora Cinnamon Desktop',
-  'releaseDate': '2016-06-21',
-  'screenshots': ['http://spins.fedoraproject.org/en/cinnamon/../static/images/screenshots/screenshot-cinnamon.jpg'],
-  'source': 'Spins',
-  'summary': 'A modern desktop featuring traditional Gnome user experience.',
-  'variants': {'i386': {'sha256': '7912efc41e75bf79c35c6bbd5b072dd456b4836cae0fc69ac24890bfaccbe9b7',
-                        'size': 1288490188,
-                        'url': 'https://download.fedoraproject.org/pub/fedora/linux/releases/24/Live/i386/Fedora-Cinnamon-Live-i386-24-1.2.iso'},
-               'x86_64': {'sha256': 'df601acd9eebc21ba2a5a1949db072d34f1a04fd762da1dca0299a59bf97a0f8',
-                          'size': 1288490188,
-                          'url': 'https://download.fedoraproject.org/pub/fedora/linux/releases/24/Live/x86_64/Fedora-Cinnamon-Live-x86_64-24-1.2.iso'}},
-  'version': '24'},
- {'description': u'<p>Sugar on a Stick is a Fedora-based operating system featuring the award-winning Sugar Learning Platform and designed to fit on an ordinary USB thumbdrive ("stick").</p><p>Sugar sets aside the traditional \u201coffice-desktop\u201d metaphor, presenting a child-friendly graphical environment. Sugar automatically saves your progress to a "Journal" on your stick, so teachers and parents can easily pull up "all collaborative web browsing sessions done in the past week" or "papers written with Daniel and Sarah in the last 24 hours" with a simple query rather than memorizing complex file/folder structures. Applications in Sugar are known as Activities, some of which are described below.</p><p>It is now deployable for the cost of a stick rather than a laptop; students can take their Sugar on a Stick thumbdrive to any machine - at school, at home, at a library or community center - and boot their customized computing environment without touching the host machine\u2019s hard disk or existing system at all.</p>',
-  'logo': 'qrc:/logo_soas',
-  'name': 'Fedora SoaS Desktop',
-  'releaseDate': '2016-06-21',
-  'screenshots': ['http://spins.fedoraproject.org/en/soas/../static/images/screenshots/screenshot-soas.jpg'],
-  'source': 'Spins',
-  'summary': 'Discover. Reflect. Share. Learn.',
-  'variants': {'i386': {'sha256': '2af7c621681c3f4978e71a25bfd608fa66d2b441db51806b9ab639901c8eec58',
-                        'size': 708837376,
-                        'url': 'http://dl.fedoraproject.org/pub/alt/unofficial/releases/24/i386/Fedora-SoaS-Live-i386-24-20160614.n.0.iso'},
-               'x86_64': {'sha256': 'ba1dbd4bac36660f8f5b6ef9acaa18bcfb117413bc2b557b05a876778f4fa777',
-                          'size': 732954624,
-                          'url': 'http://dl.fedoraproject.org/pub/alt/unofficial/releases/24/x86_64/Fedora-SoaS-Live-x86_64-24-20160614.n.0.iso'}},
-  'version': '24'},
- {'description': u'<p>Looking for a ready-to-go desktop environment brimming with free and open source multimedia production and publishing tools? Try the Design Suite, a Fedora Spin created by designers, for designers.</p><p>The Design Suite includes the favorite tools of the Fedora Design Team. These are the same programs we use to create all the artwork that you see within the Fedora Project, from desktop backgrounds to CD sleeves, web page designs, application interfaces, flyers, posters and more. From document publication to vector and bitmap editing or 3D modeling to photo management, the Design Suite has an application for you \u2014 and you can install thousands more from the Fedora universe of packages.</p>',
-  'logo': 'qrc:/logo_design',
-  'name': 'Fedora Design Suite',
-  'releaseDate': '2016-06-21',
-  'screenshots': [],
-  'source': 'Labs',
-  'summary': 'Visual design, multimedia production, and publishing suite of free and open source creative tools.',
-  'variants': {'i386': {'sha256': '77ac8c0ec235604ea2a49ad475356d243636f460410038879504fc82665c1651',
-                        'size': 2040109465,
-                        'url': 'http://dl.fedoraproject.org/pub/alt/unofficial/releases/24/i386/Fedora-Design_suite-Live-i386-24-20160614.n.0.iso'},
-               'x86_64': {'sha256': 'd9a44a18e7433e8d523fa38d7c0f71199b5866af57d17f3c1e433cdd098373cd',
-                          'size': 1932735283,
-                          'url': 'http://dl.fedoraproject.org/pub/alt/unofficial/releases/24/x86_64/Fedora-Design_suite-Live-x86_64-24-20160614.n.0.iso'}},
-  'version': '24'},
- {'description': u"<p>The Fedora Games spin offers a perfect showcase of the best games available in Fedora. The included games span several genres, from first-person shooters to real-time and turn-based strategy games to puzzle games.</p><p>Not all the games available in Fedora are included on this spin, but trying out this spin will give you a fair impression of Fedora's ability to run great games.</p>",
-  'logo': 'qrc:/logo_games',
-  'name': 'Fedora Games',
-  'releaseDate': '2016-06-21',
-  'screenshots': [],
-  'source': 'Labs',
-  'summary': 'For audio enthusiasts and musicians who want to create, edit and produce audio and music on Linux.',
-  'variants': {'i386': {'sha256': 'a9cefe5d295ac9a0bfb61185917694fa81b2ca51bf0b547b8d8ecf892b191a25',
-                        'size': 4080218931,
-                        'url': 'https://download.fedoraproject.org/pub/alt/releases/24/Spins/i386/Fedora-Games-Live-i386-24-1.2.iso'},
-               'x86_64': {'sha256': '84ebef0dfc7a15af5164ed8c40f8bd7ea4fbdf8046457f3fe7e6278d2fcd5510',
-                          'size': 3865470566,
-                          'url': 'https://download.fedoraproject.org/pub/alt/releases/24/Spins/x86_64/Fedora-Games-Live-x86_64-24-1.2.iso'}},
-  'version': '24'},
- {'description': u'<p>The Fedora Robotics spin provides a wide variety of free and open robotics software packages. These range from hardware accessory libraries for the Hokuyo laser scanners or Katana robotic arm to software frameworks like Fawkes or Player and simulation environments such as Stage and RoboCup Soccer Simulation Server 2D/3D. It also provides a ready to use development environment for robotics including useful libraries such as OpenCV computer vision library, Festival text to speech system and MRPT.</p><p>The Robotics spin is targeted at people just discovering their interest in robotics as well as experienced roboticists. For the former we provide a readily usable simulation environment with an introductory hands-on demonstration, and for the latter we provide a full development environment, to be used immediately.</p>',
-  'logo': 'qrc:/logo_robotics',
-  'name': 'Fedora Robotics Suite',
-  'releaseDate': '2016-06-21',
-  'screenshots': [],
-  'source': 'Labs',
-  'summary': 'A wide variety of free and open robotics software packages for beginners and experts in robotics.',
-  'variants': {'i386': {'sha256': '1e689c0b67def88d4a94e600c559f2e30fa92a10a6669081d87117227327702e',
-                        'size': 2899102924,
-                        'url': 'https://download.fedoraproject.org/pub/alt/releases/24/Spins/i386/Fedora-Robotics-Live-i386-24-1.2.iso'},
-               'x86_64': {'sha256': 'fd5a0718f85499d0fe69f9c9a8fcf00eb32ec06e8b7520ddd063433a462ce6b7',
-                          'size': 2576980377,
-                          'url': 'https://download.fedoraproject.org/pub/alt/releases/24/Spins/x86_64/Fedora-Robotics-Live-x86_64-24-1.2.iso'}},
-  'version': '24'},
- {'description': u'<p>Wary of reinstalling all the essential tools for your scientific and numerical work? The answer is here. Fedora Scientific Spin brings together the most useful open source scientific and numerical tools atop the goodness of the KDE desktop environment.</p><p>Fedora Scientific currently ships with numerous applications and libraries. These range from libraries such as the GNU Scientific library, the SciPy libraries, tools like Octave and xfig to typesetting tools like Kile and graphics programs such as Inkscape. The current set of packages include an IDE, tools and libraries for programming in C, C++, Python, Java and R. Also included along with are libraries for parallel computing such as the OpenMPI and OpenMP. Tools for typesetting, writing and publishing are included.</p>',
-  'logo': 'qrc:/logo_scientific',
-  'name': 'Fedora Scientific',
-  'releaseDate': '2016-06-21',
-  'screenshots': [],
-  'source': 'Labs',
-  'summary': 'A bundle of open source scientific and numerical tools used in research.',
-  'variants': {'i386': {'sha256': '68536eafea38c6c83303355f897eea4034c01b1c28d8ffd3e3ccfc5f51983307',
-                        'size': 3435973836,
-                        'url': 'https://download.fedoraproject.org/pub/alt/releases/24/Spins/i386/Fedora-Scientific_KDE-Live-i386-24-1.2.iso'},
-               'x86_64': {'sha256': '6cfdba696cbd69e2878f4c6f4ee5cf7852dc6b6265ddf85477c48e67822d0aeb',
-                          'size': 3113851289,
-                          'url': 'https://download.fedoraproject.org/pub/alt/releases/24/Spins/x86_64/Fedora-Scientific_KDE-Live-x86_64-24-1.2.iso'}},
-  'version': '24'},
- {'description': u'<p>The Fedora Security Lab provides a safe test environment to work on security auditing, forensics, system rescue and teaching security testing methodologies in universities and other organizations.</p><p>The spin is maintained by a community of security testers and developers. It comes with the clean and fast Xfce Desktop Environment and a customized menu that provides all the instruments needed to follow a proper test path for security testing or to rescue a broken system. The Live image has been crafted to make it possible to install software while running, and if you are running it from a USB stick created with LiveUSB Creator using the overlay feature, you can install and update software and save your test results permanently.</p>',
-  'logo': 'qrc:/logo_security',
-  'name': 'Fedora Security Lab',
-  'releaseDate': '2016-06-21',
-  'screenshots': [],
-  'source': 'Labs',
-  'summary': 'A safe test environment to work on security auditing, forensics, system rescue and teaching security testing methodologies.',
-  'variants': {'i386': {'sha256': '5e66b08452932735009e053ea094fb19a423ac33934294bd6be19087154d2a4f',
-                        'size': 1288490188,
-                        'url': 'https://download.fedoraproject.org/pub/alt/releases/24/Spins/i386/Fedora-Security-Live-i386-24-1.2.iso'},
-               'x86_64': {'sha256': '522b432295b380afcaf91310672e34f23a3b2219f0209b7d3cc6d99d03959807',
-                          'size': 1181116006,
-                          'url': 'https://download.fedoraproject.org/pub/alt/releases/24/Spins/x86_64/Fedora-Security-Live-x86_64-24-1.2.iso'}},
-  'version': '24'},
- {'description': u"<p>Fedora Astronomy brings a complete open source toolchain to both amateur and professional astronomers.</p><p>The Spin provides the Fedora KDE desktop enhanced with a complete scientific Python environment and the AstrOmatic software for data analysis. KStars was added to provide a full featured astrophotography tool. As KStars uses the INDI library to control equipment, various telescopes, cameras etc. are supported. Summarized, Fedora Astronomy provides a complete set of software, from the observation planning to the final results.</p>",
-  'logo': 'qrc:/logo_astronomy',
-  'name': 'Fedora Astronomy',
-  'releaseDate': '2016-06-21',
-  'screenshots': [],
-  'source': 'Labs',
-  'summary': 'Powerful completely open-source and free tool for amateurs and professionals.',
-  'variants': {'i386': {'sha256': 'e5724016044f1f0b836d8551a10ae6e0b987552e1fa934e58d0aca3a61ab185d',
-                        'size': 2631925760,
-                        'url': 'https://download.fedoraproject.org/pub/alt/releases/24/Labs/i386/iso/Fedora-Astronomy_KDE-Live-i386-24-1.2.iso'},
-               'x86_64': {'sha256': 'eeb21b6801494668d2031a0c341cfd266b633ae33d7ce5cd3ea1ec308e70224a',
-                          'size': 2477785088,
-                          'url': 'https://download.fedoraproject.org/pub/alt/releases/24/Labs/x86_64/iso/Fedora-Astronomy_KDE-Live-x86_64-24-1.2.iso'}},
-  'version': '24'}
-]
 
-
-releases = fedora_releases
+releases = []
 
 if __name__ == '__main__':
     import pprint

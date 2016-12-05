@@ -67,8 +67,9 @@ def cancel_download(url, target_folder=find_downloads()):
 def download(parent, url, target_folder=find_downloads(), update_maximum = None, update_current = None):
     CHUNK_SIZE = 1024 * 1024
     current_size = 0
-
     file_name = os.path.basename(url)
+    if isinstance(target_folder, bytes):
+        target_folder = target_folder.decode('utf8')
     full_path = os.path.join(target_folder, file_name)
     partial_path = full_path + ".part"
     if os.path.exists(full_path):

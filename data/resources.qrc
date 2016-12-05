@@ -16,5 +16,6 @@
         <file alias="logo_robotics">icons/png/robotics_icon_grey_pattern.png</file>
         <file alias="logo_scientific">icons/png/scientific_icon_grey_pattern.png</file>
         <file alias="logo_security">icons/png/security-lab_icon_grey_pattern.png</file>
+        <file alias="logo_antergos">icons/png/logo-antergos.png</file>
     </qresource>
 </RCC>

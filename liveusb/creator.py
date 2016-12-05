@@ -35,10 +35,17 @@ import re
 from io import StringIO
 from argparse import _AppendAction
 from stat import ST_SIZE
+import ruamel.yaml as yaml
 
 from liveusb import _, LiveUSBError
-from liveusb.releases import fedora as releases
 
+config_file = open('/etc/liveusb-creator.yml', 'r').read()
+CONFIG = yaml.safe_load(config_file)
+
+if 'Fedora' == CONFIG['DISTRO']:
+    from liveusb.releases.fedora import releases
+elif 'Antergos' == CONFIG['DISTRO']:
+    from liveusb.releases.antergos import releases
 
 
 class Drive(object):
@@ -342,9 +349,10 @@ class LinuxLiveUSBCreator(LiveUSBCreator):
 
         # has to run in C locale
         env = os.environ.copy()
-        for i in env.keys():
-            if i.startswith('LC_'):
-                del env[i]
+        keys = [k for k in env if k.startswith('LC_')]
+        for i in keys:
+            del env[i]
+
         env['LC_ALL'] = 'C'
 
         cmd = ['dd', 'if=%s'%self.iso, 'of=%s'%drive, 'bs=1M', 'iflag=direct', 'oflag=direct', 'conv=fdatasync']
