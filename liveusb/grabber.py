@@ -132,6 +132,7 @@ def urlread(url):
             raise LiveUSBError("Couldn't download the file: %s (%d)" % (r.reason, r.status_code))
 
         for chunk in r.iter_content(CHUNK_SIZE):
+            chunk = chunk.decode('utf8')
             bytes_read += len(chunk)
             ret += chunk
 

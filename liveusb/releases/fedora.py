@@ -5,7 +5,7 @@ import traceback
 
 from pyquery import pyquery
 
-import requests
+from liveusb import grabber
 import ruamel.yaml as yaml
 from liveusb import _, LiveUSBError
 from PyQt5.QtCore import QDateTime

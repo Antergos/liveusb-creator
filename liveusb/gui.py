@@ -50,7 +50,7 @@ from setuptools.sandbox import save_pkg_resources_state
 
 from . import resources_rc
 from . import qml_rc
-import grabber
+from . import grabber
 
 from liveusb import LiveUSBCreator, LiveUSBError, _
 from liveusb.releases import releases, get_fedora_flavors
