@@ -56,7 +56,6 @@ from . import qml_rc
 from . import grabber
 
 from liveusb import LiveUSBCreator, LiveUSBError, _
-from liveusb.releases.fedora import releases, get_fedora_flavors
 
 try:
     import dbus.mainloop.pyqt5
@@ -70,6 +69,11 @@ CONFIG = yaml.safe_load(config_file)
 MAX_FAT16 = 2047
 MAX_FAT32 = 3999
 MAX_EXT = 2097152
+
+if 'Fedora' == CONFIG['DISTRO']:
+    from liveusb.releases.fedora import releases, get_flavors
+elif 'Antergos' == CONFIG['DISTRO']:
+    from liveusb.releases.antergos import releases, get_flavors
 
 
 def __(text):
@@ -678,7 +682,7 @@ class DataUpdateThread(QThread):
         self.data = data
 
     def run(self):
-        get_fedora_flavors()
+        get_flavors()
 
 
 class LiveUSBData(QObject):
@@ -861,7 +865,7 @@ class LiveUSBApp(QApplication):
         qmlRegisterUncreatableType(USBDrive, 'LiveUSB', 1, 0, 'Drive', 'Not creatable directly, use the liveUSBData instance instead')
         qmlRegisterUncreatableType(LiveUSBData, 'LiveUSB', 1, 0, 'Data', 'Use the liveUSBData root instance')
 
-        # releases = get_fedora_flavors()
+        # releases = get_flavors()
 
         engine = QQmlApplicationEngine()
         self.data = LiveUSBData(opts)

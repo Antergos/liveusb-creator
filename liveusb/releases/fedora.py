@@ -262,7 +262,7 @@ def getProducts(url='https://getfedora.org/'):
 
     return products
 
-def get_fedora_flavors(store=True):
+def get_flavors(store=True):
     r = []
     products = getProducts('https://getfedora.org/')
     spins = getSpins("http://spins.fedoraproject.org", "Spins")

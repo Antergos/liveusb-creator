@@ -14,44 +14,26 @@ config_file = open('/etc/liveusb-creator.yml', 'r').read()
 
 CONFIG = yaml.safe_load(config_file)
 BASE_URL = CONFIG['BASE_URL']
-PUB_URL = '{0}/{1}'.format(BASE_URL, CONFIG['PUB_PATH'])
-ALT_URL = '{0}/{1}'.format(BASE_URL, CONFIG['ALT_PATH'])
 ARCHES = CONFIG['ARCHES']
 
-def getArch(url):
-    return url.split('/')[-1].split('.')[0].split('-')[3]
 
-def getRelease(download):
-    for key in download.keys():
-        url = download[key]['url']
-        break
-    try:
-        return str(int(url.split('/')[-1].split('.')[0].split('-')[4]))
-    except AttributeError:
-        return ''
+def getArch():
+    return 'x86_64'
 
-def getSHA(url):
-    baseurl = '/'.join(url.split('/')[:-1])
-    filename = url.split('/')[-1]
-    try:
-        d = pyquery.PyQuery(grabber.urlread(baseurl))
-    except LiveUSBError as e:
-        return ''
-    checksum = ''
-    for i in d.items('a'):
-        if 'CHECKSUM' in i.attr('href'):
-            try:
-                checksum = grabber.urlread(baseurl + '/' + i.attr('href'))
-            except LiveUSBError as e:
-                pass
-            break
 
-    for line in checksum.split('\n'):
-        i = re.match(r'^SHA256 \(([^)]+)\) = ([a-f0-9]+)$', line)
-        if i:
-            if i.group(1) == filename:
-                return i.group(2)
-    return ''
+def _get_dl_container(d, minimal):
+    tab = d('.et_pb_tab_1')
+    return tab.children('.one_half').eq(1) if not minimal else tab.children('.et_column_last')
+
+
+def _get_blurb_container(d, minimal):
+    return d('.et_pb_blurb_0') if not minimal else d('.et_pb_blurb_1')
+
+
+def getSHA(d, minimal=False):
+    dl_container = _get_dl_container(d, minimal)
+    return dl_container.find('li:nth-child(3)').text()
+
 
 def getSize(text):
     match = re.search(r'([0-9.]+)[ ]?([KMG])B', text)
@@ -66,130 +48,32 @@ def getSize(text):
         size *= 1024
     return int(size)
 
-def getDownload(url):
-    try:
-        d = pyquery.PyQuery(grabber.urlread(url))
-    except LiveUSBError as e:
-        return None
+
+def getDownload(d, minimal=False):
+    dl_container = _get_dl_container(d, minimal)
+
     ret = dict()
-    url = d('a.btn-success').attr('href')
-    ret[getArch(url)] = dict(
-        url = url,
-        sha256 = getSHA(url),
-        size = getSize(d('a.btn-success').parent().parent()('h5').text())
+    url = dl_container.find('h3').next().attr('href')
+    version = dl_container.find('h3').next().attr('title')
+    ret[getArch()] = dict(
+        url=url,
+        sha256=getSHA(d, minimal).replace('MD5 Sum: ', ''),
+        size=getSize(dl_container.find('li:nth-child(2)').text()),
+        version=version.replace('Version ', '')
     )
-    for e in d.items("a"):
-        if "32-bit" in e.html().lower() and e.attr("href").endswith(".iso"):
-            altUrl = e.attr("href")
-            ret[getArch(altUrl)] = dict(
-                url = altUrl,
-                sha256 = getSHA(altUrl),
-                size = getSize(e.text())
-            )
-            break
     return ret
 
-def getSpinDetails(url, source):
-    try:
-        d = pyquery.PyQuery(grabber.urlread(url))
-    except LiveUSBError as e:
-        return None
-    spin = {
-        'name': '',
-        'summary': '',
-        'description': '',
-        'version': '',
-        'releaseDate': '',
-        'logo': 'qrc:/logo_fedora',
-        'screenshots': [],
-        'source': '',
-        'variants': {'': dict(
-            url='',
-            sha256='',
-            size=0
-        )}
-    }
-    spin['source'] = source
 
-    spin['name'] = d('title').html().strip()
-    if not spin['name'].startswith('Fedora'):
-        spin['name'] = 'Fedora ' + spin['name']
-    screenshot = d('img').filter('.img-responsive').attr('src')
-    if screenshot:
-        spin['screenshots'].append(url + "/.." + screenshot)
-
-    for i in d('div').filter('.col-sm-8').html().split('\n'):
-        #line = i.strip().replace('<p>', '').replace('</p>', '')
-        line = i.strip()
-        if len(line):
-            spin['description'] += line
-
-    download = getDownload(url + "/.." + d('a.btn').attr('href'))
-    if not download:
-        return None
-    spin['variants'] = download
-    spin['version'] = getRelease(download)
-    if spin['version'] == '23':
-        spin['releaseDate'] = '2015-11-03'
-    if spin['version'] == '24':
-        spin['releaseDate'] = '2016-06-21'
-
-    if 'KDE Plasma' in spin['name']:
-        spin['logo'] = 'qrc:/logo_plasma'
-    if 'Xfce' in spin['name']:
-        spin['logo'] = 'qrc:/logo_xfce'
-    if 'LXDE' in spin['name']:
-        spin['logo'] = 'qrc:/logo_lxde'
-    if 'MATE' in spin['name']:
-        spin['logo'] = 'qrc:/logo_mate'
-    if 'Cinnamon' in spin['name']:
-        spin['logo'] = 'qrc:/logo_cinnamon'
-    if 'SoaS' in spin['name']:
-        spin['logo'] = 'qrc:/logo_soas'
-
-    if 'Astronomy' in spin['name']:
-        spin['logo'] = 'qrc:/logo_astronomy'
-    if 'Design' in spin['name']:
-        spin['logo'] = 'qrc:/logo_design'
-    if 'Games' in spin['name']:
-        spin['logo'] = 'qrc:/logo_games'
-    if 'Jam' in spin['name']:
-        spin['logo'] = 'qrc:/logo_jam'
-    if 'Robotics' in spin['name']:
-        spin['logo'] = 'qrc:/logo_robotics'
-    if 'Scientific' in spin['name']:
-        spin['logo'] = 'qrc:/logo_scientific'
-    if 'Security' in spin['name']:
-        spin['logo'] = 'qrc:/logo_security'
-
-    return spin
-
-def getSpins(url, source):
-    try:
-        d = pyquery.PyQuery(grabber.urlread(url))
-    except LiveUSBError as e:
-        return None
-    spins = []
-
-    for i in d('div').filter('.high').items('span'):
-        spinUrl = url + i.siblings()('a').attr('href')
-        spin = getSpinDetails(spinUrl, source)
-        if not spin:
-            continue
-        spin['summary'] = i.html()
-        spins.append(spin)
-
-    return spins
-
-def getProductDetails(url):
-    d = pyquery.PyQuery(grabber.urlread(url))
+def getProductDetails(d, minimal=False):
+    dl_container = _get_dl_container(d, minimal)
+    blurb_container = _get_blurb_container(d, minimal)
     product = {
         'name': '',
         'summary': '',
         'description': '',
         'version': '',
         'releaseDate': '',
-        'logo': 'qrc:/logo_fedora',
+        'logo': 'qrc:/logo_antergos',
         'screenshots': [],
         'source': '',
         'variants': {'': dict(
@@ -198,68 +82,47 @@ def getProductDetails(url):
             size=0
         )}
     }
-    name = d('title').html()
+    name = dl_container.children('h3').text().replace(' ISO', '')
 
     product['name'] = name
     product['source'] = name
 
-    product['summary'] = d('h1').html()
+    if minimal:
+        product['summary'] = _('Installer Only')
+    else:
+        product['summary'] = _('Fully functional Live Antergos Environment')
 
-    for i in d('div.col-md-8, div.col-sm-8, div.col-md-5, div.col-md-6, div.col-sm-5, div.col-sm-6').items('p, h3, h2'):
-        i.remove('a, br, img')
-        if i.parent().parent()('blockquote'):
-            i = i.parent().parent()('blockquote')
-            product['description'] += '<blockquote>'
-            product['description'] += str(i('p'))
-            product['description'] += u'<p align=right> ― <em>' + i('cite').html() + '</em></p>'
-            product['description'] += '</blockquote>'
-        elif i.html() and len(i.html()) > 0: # can't remove empty tags with :empty for some reason
-            product['description'] += str(i)
-            product['description'].replace('h2', 'h4')
-            product['description'].replace('h3', 'h4')
+    desc = ['<ul>']
+    p_contents = blurb_container.find('p').text().split('^')
+    print(p_contents)
+    ___ = [desc.append('<li>{0}</li>'.format(x.strip())) for x in p_contents if x]
+    desc.append('</ul>')
+    product['description'] = ''.join(desc)
 
-    if name == "Fedora Workstation":
-        product['logo'] = 'qrc:/logo_workstation'
-    if name == "Fedora Server":
-        product['logo'] = 'qrc:/logo_server'
+    product['logo'] = 'qrc:/logo_antergos'
 
-    download = getDownload(url + "/download/")
+    download = getDownload(d, minimal)
     product['variants'] = download
-    product['version'] = getRelease(download)
-    if product['version'] == '23':
-        product['releaseDate'] = '2015-11-03'
-    if product['version'] == '24':
-        product['releaseDate'] = '2016-06-21'
+    product['releaseDate'] = product['version'] = download['x86_64']['version']
 
     return product
 
-def getProducts(url='https://getfedora.org/'):
+
+def getProducts(url=BASE_URL):
     try:
         d = pyquery.PyQuery(grabber.urlread(url))
     except LiveUSBError as e:
-        return None
+        return []
 
-    products = []
+    return [
+        getProductDetails(d, False),
+        getProductDetails(d, True)
+    ]
 
-    for i in d('div.productitem').items('a'):
-        productUrl = url
-        if i.attr('href').startswith("../"):
-            productUrl += i.attr('href')[3:]
-        else:
-            productUrl += i.attr('href')
 
-        if not "cloud" in productUrl and not productUrl.endswith("download"):
-            product = getProductDetails(productUrl)
-            if product:
-                products.append(product)
-
-    return products
-
-def get_fedora_flavors(store=True):
+def get_flavors(store=True):
     r = []
-    products = getProducts('https://getfedora.org/')
-    spins = getSpins("http://spins.fedoraproject.org", "Spins")
-    labs = getSpins("http://labs.fedoraproject.org", "Labs")
+    products = getProducts()
 
     if products:
         r += products
@@ -272,13 +135,11 @@ def get_fedora_flavors(store=True):
                   'releaseDate': '',
                   'source': 'Local',
                   'variants': {'': dict(url='', sha256='', size=0)}}]
-    if spins:
-        r += spins
-    if labs:
-        r += labs
 
     if store and len(r) > 1:
         releases[:] = r
+
+    print(r)
 
     return r
 
