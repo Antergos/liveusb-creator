@@ -197,9 +197,10 @@ class LiveUSBCreator(object):
         """ If the ISO is for a known release, return it. """
         isoname = os.path.basename(self.iso)
         for release in releases:
-            for arch in release['variants'].keys():
-                if arch in release['variants'].keys() and 'url' in release['variants'][arch] and os.path.basename(
-                        release['variants'][arch]['url']) == isoname:
+            for arch, variant in release['variants'].items():
+                if 'url' in variant and os.path.basename(variant['url']) == isoname:
+                    return release
+                if 'filename' in variant and variant['filename'] == isoname:
                     return release
         return None
 
@@ -360,7 +361,7 @@ class LinuxLiveUSBCreator(LiveUSBCreator):
         #check for version of coreutls (for progress reporting)
         p = subprocess.Popen(['dd', '--version'], stdout=subprocess.PIPE)
         p.wait()
-        version = p.stdout.readline().strip()
+        version = p.stdout.readline().strip().decode('utf8')
         if version.startswith('dd (coreutils) ') and version >= 'dd (coreutils) 8.24':
             cmd.append('status=progress')
         else:
@@ -374,7 +375,7 @@ class LinuxLiveUSBCreator(LiveUSBCreator):
             if dev.startswith(os.path.normpath(drive)) and dev != os.path.normpath(drive):
                 umount = subprocess.Popen(['umount', dev], env=env, shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                 umount.wait()
-                if umount.returncode != 0 and not 'not mounted' in umount.stdout.readline():
+                if umount.returncode != 0 and not 'not mounted' in umount.stdout.readline().decode('utf8'):
                     raise LiveUSBError(_("The drive you're trying to use is open in another application"))
 
         self.log.debug(_('Running'), cmd)

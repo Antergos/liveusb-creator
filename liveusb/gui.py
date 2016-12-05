@@ -87,10 +87,11 @@ class ReleaseDownloadThread(QThread):
 
     beingCancelled = False
 
-    def __init__(self, progress, proxies):
+    def __init__(self, progress, proxies, filename):
         QThread.__init__(self)
         self.progress = progress
         self.proxies = proxies
+        self.filename = filename
 
     def run(self):
         try:
@@ -121,10 +122,10 @@ class ReleaseDownload(QObject):
     _maximum = -1.0
     _path = ''
 
-    def __init__(self, parent):
+    def __init__(self, parent, filename):
         QObject.__init__(self, parent)
         self.release = parent
-        self._grabber = ReleaseDownloadThread(self, parent.live.get_proxies())
+        self._grabber = ReleaseDownloadThread(self, parent.live.get_proxies(), filename)
         self._live = parent.live
 
     def reset(self):
@@ -347,7 +348,7 @@ class Release(QObject):
 
         self.addWarning(_('You are about to perform a destructive install. This will erase all data and partitions on your USB drive'))
 
-        self._download = ReleaseDownload(self)
+        self._download = ReleaseDownload(self, self.get_filename())
         self._download.pathChanged.connect(self.pathChanged)
 
         self._writer = ReleaseWriter(self)
@@ -391,6 +392,16 @@ class Release(QObject):
     @pyqtProperty(str, constant=True)
     def name(self):
         return self._data['name']
+
+    def get_filename(self):
+        if '.iso' in self.get_url():
+            return os.path.basename(self.get_url())
+        try:
+            return self._data['variants']['x86_64']['filename']
+        except KeyError:
+            pass
+
+        return ''
 
     @pyqtProperty(str, constant=True)
     def logo(self):
@@ -456,11 +467,14 @@ class Release(QObject):
 
     @pyqtProperty(str, constant=True)
     def url(self):
-        if not self.isLocal:
-            for arch in self._data['variants'].keys():
-                if arch in self._archMap[self.liveUSBData.releaseProxyModel.archFilter]:
-                    return self._data['variants'][arch]['url']
-        return ''
+        return self.get_url()
+
+    def get_url(self):
+        if self.isLocal:
+            return ''
+        for arch in self._data['variants'].keys():
+            if arch in self._archMap[self.liveUSBData.releaseProxyModel.archFilter]:
+                return self._data['variants'][arch]['url']
 
     @pyqtProperty(str, notify=pathChanged)
     def path(self):

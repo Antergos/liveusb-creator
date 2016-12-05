@@ -59,7 +59,8 @@ def getDownload(d, minimal=False):
         url=url,
         sha256=getSHA(d, minimal).replace('MD5 Sum: ', ''),
         size=getSize(dl_container.find('li:nth-child(2)').text().strip()),
-        version=version.replace('Version ', '')
+        version=version.replace('Version ', ''),
+        filename=dl_container.find('li:first-child').text().strip()
     )
     return ret
 
