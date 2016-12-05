@@ -31,7 +31,7 @@ if os.path.exists('locale'):
 else:
     translation = gettext.translation('liveusb-creator', '/usr/share/locale',
                                       fallback=True)
-_ = translation.ugettext
+_ = translation.gettext
 
 def utf8_gettext(string):
     " Translate string, converting it to a UTF-8 encoded bytestring "

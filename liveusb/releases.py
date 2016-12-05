@@ -5,15 +5,18 @@ import traceback
 
 from pyquery import pyquery
 
-import grabber
+import requests
+import ruamel.yaml as yaml
 from liveusb import _, LiveUSBError
 from PyQt5.QtCore import QDateTime
 
+config_file = open('/etc/liveusb-creator.yml', 'r').read()
 
-BASE_URL = 'https://dl.fedoraproject.org'
-PUB_URL = BASE_URL + '/pub/fedora/linux/releases/'
-ALT_URL = BASE_URL + '/pub/alt/releases/'
-ARCHES = ('armhfp', 'x86_64', 'i686', 'i386')
+CONFIG = yaml.safe_load(config_file)
+BASE_URL = CONFIG['BASE_URL']
+PUB_URL = '{0}/{1}'.format(BASE_URL, CONFIG['PUB_PATH'])
+ALT_URL = '{0}/{1}'.format(BASE_URL, CONFIG['ALT_PATH'])
+ARCHES = CONFIG['ARCHES']
 
 def getArch(url):
     return url.split('/')[-1].split('.')[0].split('-')[3]

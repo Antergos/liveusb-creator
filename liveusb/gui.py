@@ -48,8 +48,8 @@ from PyQt5.QtQml import qmlRegisterType, qmlRegisterUncreatableType, QQmlCompone
 from PyQt5 import QtQuick
 from setuptools.sandbox import save_pkg_resources_state
 
-import resources_rc
-import qml_rc
+from . import resources_rc
+from . import qml_rc
 import grabber
 
 from liveusb import LiveUSBCreator, LiveUSBError, _
@@ -526,7 +526,7 @@ class ReleaseListModel(QAbstractListModel):
         return len(self.parent().releaseData)
 
     def roleNames(self):
-        return {Qt.UserRole + 1 : 'release'}
+        return {Qt.UserRole + 1 : b'release'}
 
     def data(self, index, role=Qt.DisplayRole):
         if index.isValid():

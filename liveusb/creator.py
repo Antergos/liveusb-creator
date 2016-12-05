@@ -333,7 +333,7 @@ class LinuxLiveUSBCreator(LiveUSBCreator):
             self.bus.add_signal_receiver(handleRemoved, "InterfacesRemoved", "org.freedesktop.DBus.ObjectManager",
                                          "org.freedesktop.UDisks2", "/org/freedesktop/UDisks2")
 
-        for name, device in self.udisks.GetManagedObjects().iteritems():
+        for name, device in self.udisks.GetManagedObjects().items():
             handleAdded(name, device)
 
     def dd_image(self, update_function=None):
@@ -485,7 +485,7 @@ class LinuxLiveUSBCreator(LiveUSBCreator):
         will_format = None
         will_format_device = None
 
-        for name, device in self.udisks.GetManagedObjects().iteritems():
+        for name, device in self.udisks.GetManagedObjects().items():
             if 'org.freedesktop.UDisks2.Block' in device and 'org.freedesktop.UDisks2.Filesystem' in device:
                 current_device = self.strify(device['org.freedesktop.UDisks2.Block']['Device'])
                 if current_device.startswith(d.device) and device['org.freedesktop.UDisks2.Filesystem']['MountPoints']:

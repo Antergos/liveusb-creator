@@ -1,0 +1,8 @@
+BASE_URL: 'https://dl.fedoraproject.org'
+PUB_PATH: '/pub/fedora/linux/releases/'
+ALT_PATH: '/pub/alt/releases/'
+ARCHES:
+  - armhfp
+  - x86_64
+  - i686
+  - i386
