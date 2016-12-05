@@ -58,7 +58,7 @@ from liveusb.releases import releases, get_fedora_flavors
 try:
     import dbus.mainloop.pyqt5
     dbus.mainloop.pyqt5.DBusQtMainLoop(set_as_default=True)
-except Exception, e:
+except Exception as e:
     pass
 
 MAX_FAT16 = 2047
@@ -204,7 +204,7 @@ class ReleaseWriterThread(QThread):
         try:
             self.ddImage(now)
 
-        except Exception, e:
+        except Exception as e:
             self.parent.release.addError(e.args[0])
             self.live.log.exception(e)
 

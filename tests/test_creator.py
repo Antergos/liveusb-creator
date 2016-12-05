@@ -76,7 +76,7 @@ class TestLiveUSBCreator:
                 live.unmount_device()
                 assert not live.drive['mount'] and not live.drive['unmount']
             else:
-                raise Exception, "Device not mounted from previous test?"
+                raise Exception("Device not mounted from previous test?")
 
     def test_verify_filesystem(self):
         live = self._get_creator()

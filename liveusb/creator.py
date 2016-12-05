@@ -395,7 +395,7 @@ class LinuxLiveUSBCreator(LiveUSBCreator):
             try:
                 os.kill(pid, signal.SIGHUP)
                 self.log.debug("Killed process %d" % pid)
-            except OSError, e:
+            except OSError as e:
                 self.log.debug(repr(e))
 
     def verify_iso_md5(self):
@@ -407,7 +407,7 @@ class LinuxLiveUSBCreator(LiveUSBCreator):
         self.log.info(_('Verifying ISO MD5 checksum'))
         try:
             self.popen('checkisomd5 "%s"' % self.iso)
-        except LiveUSBError, e:
+        except LiveUSBError as e:
             self.log.exception(e)
             self.log.info(_('ISO MD5 checksum verification failed'))
             return False
@@ -727,7 +727,7 @@ class WindowsLiveUSBCreator(LiveUSBCreator):
             else:
                 obj = obj[0]
                 self._win32_logicaldisk[drive] = obj
-        except Exception, e:
+        except Exception as e:
             self.log.exception(e)
             self.log.error("Unable to get Win32_LogicalDisk")
         return obj
@@ -738,7 +738,7 @@ class WindowsLiveUSBCreator(LiveUSBCreator):
         try:
             size = int(self._get_win32_logicaldisk(drive).Size)
             self.log.debug(_("Max size of %s: %d") % (drive, size))
-        except Exception, e:
+        except Exception as e:
             self.log.exception(e)
             self.log.warning(_("Error getting drive size: %r") % e)
         return size
@@ -797,7 +797,7 @@ class WindowsLiveUSBCreator(LiveUSBCreator):
                     proxies['http'] = 'http://%s' % server
                     proxies['ftp'] = 'ftp://%s' % server
             settings.Close()
-        except Exception, e:
+        except Exception as e:
             self.log.warning(_('Unable to detect proxy settings: %r') % e)
         self.log.debug(_('Using proxies: %r') % proxies)
         return proxies

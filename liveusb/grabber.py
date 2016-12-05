@@ -149,4 +149,4 @@ def __print(val):
 if __name__ == '__main__':
     import pprint
     #download("https://download.fedoraproject.org/pub/fedora/linux/releases/23/Workstation/x86_64/iso/Fedora-Live-Workstation-x86_64-23-10.iso", update_maximum=__print, update_current=__print)
-    print find_downloads()
+    print(find_downloads())

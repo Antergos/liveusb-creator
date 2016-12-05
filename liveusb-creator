@@ -90,8 +90,8 @@ def main():
             live.extract_iso()
             live.update_configs()
             live.install_bootloader()
-        except Exception, e:
-            print str(e)
+        except Exception as e:
+            print(str(e))
         x = raw_input("\nDone!  Press any key to exit")
     else:
         ## Start our graphical interface

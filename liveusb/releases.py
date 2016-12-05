@@ -32,14 +32,14 @@ def getSHA(url):
     filename = url.split('/')[-1]
     try:
         d = pyquery.PyQuery(grabber.urlread(baseurl))
-    except LiveUSBError, e:
+    except LiveUSBError as e:
         return ''
     checksum = ''
     for i in d.items('a'):
         if 'CHECKSUM' in i.attr('href'):
             try:
                 checksum = grabber.urlread(baseurl + '/' + i.attr('href'))
-            except LiveUSBError, e:
+            except LiveUSBError as e:
                 pass
             break
 
@@ -66,7 +66,7 @@ def getSize(text):
 def getDownload(url):
     try:
         d = pyquery.PyQuery(grabber.urlread(url))
-    except LiveUSBError, e:
+    except LiveUSBError as e:
         return None
     ret = dict()
     url = d('a.btn-success').attr('href')
@@ -89,7 +89,7 @@ def getDownload(url):
 def getSpinDetails(url, source):
     try:
         d = pyquery.PyQuery(grabber.urlread(url))
-    except LiveUSBError, e:
+    except LiveUSBError as e:
         return None
     spin = {
         'name': '',
@@ -164,7 +164,7 @@ def getSpinDetails(url, source):
 def getSpins(url, source):
     try:
         d = pyquery.PyQuery(grabber.urlread(url))
-    except LiveUSBError, e:
+    except LiveUSBError as e:
         return None
     spins = []
 
@@ -233,7 +233,7 @@ def getProductDetails(url):
 def getProducts(url='https://getfedora.org/'):
     try:
         d = pyquery.PyQuery(grabber.urlread(url))
-    except LiveUSBError, e:
+    except LiveUSBError as e:
         return None
 
     products = []
