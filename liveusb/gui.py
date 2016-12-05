@@ -36,7 +36,7 @@ property of the backend.
 import os
 import sys
 import logging
-import urlparse
+import urllib.parse as urlparse
 
 
 from time import sleep
@@ -602,7 +602,7 @@ class ReleaseListProxy(QSortFilterProxyModel):
 
     @archFilter.setter
     def archFilter(self, value):
-        if self._archMap.has_key(value) and self.archFilter != self._archMap[value]:
+        if value in self._archMap and self.archFilter != self._archMap[value]:
             self._archFilter = self._archMap[value]
             self.archChanged.emit()
             self.invalidateFilter()

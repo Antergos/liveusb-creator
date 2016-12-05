@@ -32,7 +32,7 @@ import subprocess
 import sys
 import time
 import re
-from StringIO import StringIO
+from io import StringIO
 from argparse import _AppendAction
 from stat import ST_SIZE
 
@@ -116,18 +116,16 @@ class LiveUSBCreator(object):
         @param kwargs: Extra arguments to pass to subprocess.Popen
         """
         self.log.debug(cmd)
-        if isinstance(cmd, unicode):
-            cmd = cmd.encode(sys.getfilesystemencoding(), 'replace')
         self.output.write(cmd)
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE, stdin=subprocess.PIPE,
                                 shell=True, **kwargs)
         self.pids.append(proc.pid)
         out, err = proc.communicate()
-        if isinstance(out, unicode):
-            out = out.encode('utf-8', 'replace')
-        if isinstance(err, unicode):
-            err = err.encode('utf-8', 'replace')
+        if out:
+            out = out.decode('utf-8')
+        if err:
+            err = err.decode('utf-8')
         self.output.write(out + '\n' + err + '\n')
         if proc.returncode:
             filename = self.write_log()
@@ -160,16 +158,15 @@ class LiveUSBCreator(object):
                 checksum = hashlib.sha256()
             else:
                 return True
-            isofile = file(self.iso, 'rb')
-            bytesize = 1024 ** 2
-            total = 0
-            while bytesize:
-                data = isofile.read(bytesize)
-                checksum.update(data)
-                bytesize = len(data)
-                total += bytesize
-                progress.update_progress(total / 1024)
-            isofile.close()
+            with open(self.iso, 'rb') as isofile:
+                bytesize = 1024 ** 2
+                total = 0
+                while bytesize:
+                    data = isofile.read(bytesize)
+                    checksum.update(data)
+                    bytesize = len(data)
+                    total += bytesize
+                    progress.update_progress(total / 1024)
             if checksum.hexdigest() == release[algorithm]:
                 return True
             else:
@@ -185,9 +182,8 @@ class LiveUSBCreator(object):
         """ Write out our subprocess stdout/stderr to a log file """
         tmpdir = os.getenv('TEMP', '/tmp')
         filename = os.path.join(tmpdir, 'liveusb-creator.log')
-        out = file(filename, 'a')
-        out.write(self.output.getvalue())
-        out.close()
+        with open(filename, 'a') as out:
+            out.write(self.output.getvalue())
         return filename
 
     def get_release_from_iso(self):
@@ -204,7 +200,7 @@ class LiveUSBCreator(object):
         if not drive:
             self._drive = None
             return
-        if not self.drives.has_key(str(drive)):
+        if str(drive) not in self.drives:
             found = False
             for key in self.drives.keys():
                 if self.drives[key].device == drive:
@@ -232,9 +228,8 @@ class LiveUSBCreator(object):
     def _to_unicode(obj, encoding='utf-8'):
         if hasattr(obj, 'toUtf8'):  # PyQt5.QtCore.QString
             obj = str(obj.toUtf8())
-        if isinstance(obj, basestring):
-            if not isinstance(obj, unicode):
-                obj = unicode(obj, encoding, 'replace')
+        if hasattr(obj, 'decode'):
+            obj = obj.decode('utf8')
         return obj
 
     def flush_buffers(self):
@@ -326,7 +321,7 @@ class LinuxLiveUSBCreator(LiveUSBCreator):
                 self.callback()
 
         def handleRemoved(path, interfaces):
-            if 'org.freedesktop.UDisks2.Block' in interfaces and self.drives.has_key(path):
+            if 'org.freedesktop.UDisks2.Block' in interfaces and path in self.drives:
                 del self.drives[path]
 
             if self.callback:
@@ -460,16 +455,16 @@ class LinuxLiveUSBCreator(LiveUSBCreator):
         # Get size of drive
         # progress.set_max_progress(self.isosize / 1024)
         checksum = hashlib.sha1()
-        device_name = unicode(self.drive.device)
-        device = file(device_name, 'rb')
-        bytes = 1024 ** 2
-        total = 0
-        while bytes:
-            data = device.read(bytes)
-            checksum.update(data)
-            bytes = len(data)
-            total += bytes
-            progress.update_progress(total / 1024)
+        device_name = self.drive.device.decode('utf8')
+        with open(device_name, 'rb') as device:
+            bytes = 1024 ** 2
+            total = 0
+            while bytes:
+                data = device.read(bytes)
+                checksum.update(data)
+                bytes = len(data)
+                total += bytes
+                progress.update_progress(total / 1024)
         hexdigest = checksum.hexdigest()
         self.log.info("sha1(%s) = %s" % (device_name, hexdigest))
         return hexdigest
@@ -573,16 +568,16 @@ class WindowsLiveUSBCreator(LiveUSBCreator):
 
                 data = Drive()
                 data.device = str(d.Index)
-                data.friendlyName = unicode(d.Caption).encode('utf-8').replace(' USB Device', '')
+                data.friendlyName = d.Caption.encode('utf-8').replace(' USB Device', '')
                 data.size = float(d.Size)
 
                 for p in d.associators('Win32_DiskDriveToDiskPartition'):
                     for l in p.associators('Win32_LogicalDiskToPartition'):
-                        data.mount.append(unicode(l.DeviceID).encode('utf-8'))
+                        data.mount.append(l.DeviceID.encode('utf-8'))
 
                 data.isIso9660 = not data.mount
 
-                drives[unicode(d.Name).encode('utf-8')] = data
+                drives[d.Name.encode('utf-8')] = data
 
             changed = False
             if self.drives != drives:
@@ -745,7 +740,7 @@ class WindowsLiveUSBCreator(LiveUSBCreator):
 
     def popen(self, cmd, **kwargs):
         import win32process
-        if isinstance(cmd, basestring):
+        if isinstance(cmd, str):
             cmd = cmd.split()
         prgmfiles = os.getenv('PROGRAMFILES')
         folder = 'LiveUSB Creator'
@@ -823,15 +818,15 @@ class WindowsLiveUSBCreator(LiveUSBCreator):
         progress.set_max_progress(self.drive['size'])
         checksum = hashlib.sha1()
         device_name = r'\\.\%s' % self.drive['device']
-        device = file(device_name, 'rb')
-        bytes = 1
-        total = 0
-        while bytes:
-            data = device.read(1024 ** 2)
-            checksum.update(data)
-            bytes = len(data)
-            total += bytes
-            progress.update_progress(total)
+        with open(device_name, 'rb') as device:
+            bytes = 1
+            total = 0
+            while bytes:
+                data = device.read(1024 ** 2)
+                checksum.update(data)
+                bytes = len(data)
+                total += bytes
+                progress.update_progress(total)
         hexdigest = checksum.hexdigest()
         self.log.info("sha1(%s) = %s" % (self.drive['device'], hexdigest))
         return hexdigest
