@@ -4,6 +4,7 @@ import re
 import traceback
 
 from pyquery import pyquery
+import requests
 
 from liveusb import grabber
 import ruamel.yaml as yaml
@@ -35,7 +36,7 @@ def getSHA(url):
     baseurl = '/'.join(url.split('/')[:-1])
     filename = url.split('/')[-1]
     try:
-        d = pyquery.PyQuery(grabber.urlread(baseurl))
+        d = pyquery.PyQuery(requests.get(url).content)
     except LiveUSBError as e:
         return ''
     checksum = ''
@@ -74,6 +75,10 @@ def getDownload(url):
         return None
     ret = dict()
     url = d('a.btn-success').attr('href')
+    if '.iso' not in url:
+        url = d('.fmw-linux a.btn-success').attr('href')
+    if not url or '.iso' not in url:
+        return None
     ret[getArch(url)] = dict(
         url = url,
         sha256 = getSHA(url),
@@ -225,12 +230,13 @@ def getProductDetails(url):
         product['logo'] = 'qrc:/logo_server'
 
     download = getDownload(url + "/download/")
-    product['variants'] = download
-    product['version'] = getRelease(download)
-    if product['version'] == '23':
-        product['releaseDate'] = '2015-11-03'
-    if product['version'] == '24':
-        product['releaseDate'] = '2016-06-21'
+    if download:
+        product['variants'] = download
+        product['version'] = getRelease(download)
+        if product['version'] == '23':
+            product['releaseDate'] = '2015-11-03'
+        if product['version'] == '24':
+            product['releaseDate'] = '2016-06-21'
 
     return product
 
